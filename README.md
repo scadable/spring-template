@@ -1,1 +1,1 @@
-# Live Query Service
+# Spring boot service template
