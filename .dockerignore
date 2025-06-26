@@ -1,0 +1,8 @@
+# build outputs / IDE metadata
+build
+out
+.gradle
+.idea
+.vscode
+# OS cruft
+.DS_Store
