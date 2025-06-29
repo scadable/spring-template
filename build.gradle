@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
+    id 'com.diffplug.spotless' version '6.15.0'   // ➜ NEW
 }
 
 group = 'main.scadable'
@@ -51,4 +52,27 @@ jacocoTestCoverageVerification {
 
 tasks.named('check') {
     dependsOn jacocoTestCoverageVerification
+}
+
+// ---------------------------------------------------------------------------
+// Code-style / formatting
+// ---------------------------------------------------------------------------
+spotless {
+    java {
+        googleJavaFormat('1.27.0')
+        // Optionally exclude generated code:
+        targetExclude('**/generated/**')
+    }
+    // You can also keep build scripts, markdown, etc. tidy:
+    format 'misc', {
+        target '*.gradle', '*.md', '.gitignore'
+        indentWithSpaces()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+// Fail the build if code is not formatted
+tasks.named('check') {
+    dependsOn 'jacocoTestCoverageVerification', 'spotlessCheck'
 }
