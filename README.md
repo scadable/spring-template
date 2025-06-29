@@ -1,2 +1,1 @@
 # Spring boot service template
-
