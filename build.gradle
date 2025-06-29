@@ -3,6 +3,10 @@ plugins {
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
     id 'jacoco'
+    id 'com.diffplug.spotless' version '6.15.0'   // ➜ NEW
+
+    id 'com.github.spotbugs'              version '6.2.1'
+
 }
 
 group = 'main.scadable'
@@ -24,6 +28,10 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.mockito:mockito-inline:5.2.0'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Security detectors for SpotBugs
+    spotbugsPlugins       'com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0'
+    compileOnly           'com.github.spotbugs:spotbugs-annotations:4.9.3'
 }
 
 tasks.named('test') {
@@ -51,4 +59,65 @@ jacocoTestCoverageVerification {
 
 tasks.named('check') {
     dependsOn jacocoTestCoverageVerification
+}
+
+// ---------------------------------------------------------------------------
+// Code-style / formatting
+// ---------------------------------------------------------------------------
+spotless {
+    java {
+        googleJavaFormat('1.27.0')
+        // Optionally exclude generated code:
+        targetExclude('**/generated/**')
+    }
+    // You can also keep build scripts, markdown, etc. tidy:
+    format 'misc', {
+        target '*.gradle', '*.md', '.gitignore'
+        indentWithSpaces()
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+}
+
+import com.github.spotbugs.snom.Effort
+
+spotbugs {
+    toolVersion.set("4.8.5")
+    effort.set(Effort.MAX)
+    showProgress.set(true)
+}
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html.required.set(true)
+        xml.required .set(false)
+    }
+}
+
+
+tasks.withType(com.github.spotbugs.snom.SpotBugsTask).configureEach {
+    reports {
+        html.required.set(true)
+        xml.required .set(false)
+    }
+}
+
+tasks.register('spotbugsEnforce') {
+    dependsOn tasks.named('spotbugsMain')
+    doLast {
+        def report = file('build/reports/spotbugs/main.html')
+        if (report.exists() && report.text.contains('BugInstance')) {
+            throw new GradleException(
+                    'SpotBugs reported issues — see build/reports/spotbugs/main.html')
+        }
+    }
+}
+
+
+tasks.named('check') {
+    dependsOn(
+            'jacocoTestCoverageVerification',
+            'spotlessCheck',
+            'spotbugsEnforce'
+    )
 }
